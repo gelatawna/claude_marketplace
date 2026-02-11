@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "BDAP_DI_marketplace",
+  "description": "A marketplace for plugins related to the BDAP DI ecosystem.",
+  "owner": {
+    "name": "DI Team",
+    "email": "<di_dev@tchibo.de>"
+  },
+  "plugins": [
+    {
+      "name": "bdap-di",
+      "source": "./.claude-plugin/bdap-di",
+      "description": "Plugin that provides skills and agents to use with the BDAP DI ecosystem.",
+      "category": "development"
+    }
+  ]
+}
