@@ -28,7 +28,7 @@ The plugin is distributed via the marketplace. To install it via Claude Code CLI
 Or run the first steps at once like:
 
 * Add the 'BDAP_DI_marketplace'
-  * /plugin marketplace add git@gitlab.com:tchibo-com/bi/sap-di/claude-di-marketplace.git  
+  * `/plugin marketplace add git@gitlab.com:tchibo-com/bi/sap-di/claude-di-marketplace.git`  
 
 * Install plugins from the marketplace like bdap-di plugin
   * `/plugin install bdap-di@BDAP_DI_marketplace`

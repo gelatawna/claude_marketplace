@@ -1,9 +1,9 @@
 ---
 name: pii-agent
-description: Analyzes ORM models for GDPR compliance. Scans database models, entities, and schemas to identify columns containing PII that lack proper protection. Use when checking SQLAlchemy, Django, Pydantic, or other ORM definitions for data protection compliance.
+description: Analyzes ORM models for GDPR compliance. Scans ORMs to identify columns containing PII that lack proper protection. Use when checking SQLAlchemy, Django, Pydantic, or other ORM definitions for data protection compliance.
 tools: Read, Grep, Glob, Bash, Skill
-model: opus
-skills: gdpr, sql-runner
+model: inherit
+skills: gdpr
 permissionMode: acceptEdits
 ---
 
@@ -84,7 +84,7 @@ You must generate a quick overview as defined below.
 
 ### Quick Overview
 
-Prepare a Report with tabs as delimeters
+Prepare a Report with tabs as delimiters
 - Write a list of orm models and their columns that are critical and needed to be flagged as pii relevant if they are not flagged correctly. 
 - Apply the following format for the result-table: orm_model_name | column_name | is_business_key | pii_category | current_protection | gdpr_relevance | recommended_action | confidence_level | pii_reason
 
