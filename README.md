@@ -21,14 +21,14 @@ The plugin is distributed via the marketplace. To install it via Claude Code CLI
 * /plugin command, 
 * Select "Marketplaces"
 * Chose "+ Add Marketplace".
-* Set `git@gitlab.com:tchibo-com/bi/sap-di/relational-engine.git` or a local path to this repository as the marketplace source.
+* Set `git@gitlab.com:tchibo-com/bi/sap-di/claude-di-marketplace.git` or a local path to this repository as the marketplace source.
 * Set the scope where the plugin should be enabled e.g. user scope, project scope or local scope.
 * Restart Claude Code CLI to load the plugin.
 
 Or run the first steps at once like:
 
 * Add the 'BDAP_DI_marketplace'
-  * `/plugin marketplace add git@gitlab.com:tchibo-com/bi/sap-di/relational-engine.git`
+  * /plugin marketplace add git@gitlab.com:tchibo-com/bi/sap-di/claude-di-marketplace.git  
 
 * Install plugins from the marketplace like bdap-di plugin
   * `/plugin install bdap-di@BDAP_DI_marketplace`
@@ -37,10 +37,10 @@ To register the marketplace manually, follow these steps:
 1. Ensure the marketplace is registered in your`~/.claude/plugins/known_marketplaces.json`:
 ```json
 {
-  "bdap-di": "git@gitlab.com:tchibo-com/bi/sap-di/relational-engine.git",
+  "bdap-di": "git@gitlab.com:tchibo-com/bi/sap-di/claude-di-marketplace.git",
       "source": {
       "source": "git",
-      "url": "git@gitlab.com:tchibo-com/bi/sap-di/relational-engine.git"
+      "url": "git@gitlab.com:tchibo-com/bi/sap-di/claude-di-marketplace.git"
     }
 }
 ```
