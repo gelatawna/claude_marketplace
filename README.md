@@ -2,10 +2,10 @@
 
 This repository serves as the plugin marketplace for distributing BDAP-DI plugins to Claude Code users within the BDAP community.
 
-Marketplace Name: `BDAP_DI_marketplace`
+Marketplace Name: **BDAP_DI_marketplace**
 
 Plugins:
-* `bdap-di` - The main plugin of the BDAP-DI ecosystem, providing various skills and agents e.g. for data integration tasks.
+* **bdap-di** - The main plugin of the BDAP-DI ecosystem, providing various skills and agents e.g. for data integration tasks.
 
 Claude References: 
 * https://code.claude.com/docs/en/discover-plugins, 
@@ -29,17 +29,17 @@ As an overview, the installation process includes the following steps:
 
 Or run the first steps at once like:
 
-* Add the 'BDAP_DI_marketplace'
+* Add the **BDAP_DI_marketplace**
   * `/plugin marketplace add git@gitlab.com:tchibo-com/bi/sap-di/claude-di-marketplace.git`  
 
-* Install plugins from the marketplace like bdap-di plugin
+* Install plugins from the marketplace like **bdap-di** plugin
   * `/plugin install bdap-di@BDAP_DI_marketplace`
 
 To register the marketplace manually, follow these steps:
 1. Ensure the marketplace is registered in your`~/.claude/plugins/known_marketplaces.json`:
 ```json
 {
-  "bdap-di": "git@gitlab.com:tchibo-com/bi/sap-di/claude-di-marketplace.git",
+  "BDAP_DI_marketplace": "git@gitlab.com:tchibo-com/bi/sap-di/claude-di-marketplace.git",
       "source": {
       "source": "git",
       "url": "git@gitlab.com:tchibo-com/bi/sap-di/claude-di-marketplace.git"
