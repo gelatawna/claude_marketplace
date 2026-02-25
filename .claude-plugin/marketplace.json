@@ -12,6 +12,12 @@
       "source": "./.claude-plugin/bdap-di",
       "description": "Plugin that provides skills and agents to use with the BDAP DI ecosystem.",
       "category": "development"
+    },
+    {
+      "name": "session",
+      "source": "./.claude-plugin/session",
+      "description": "Session management for context persistence and cross-session communication.",
+      "category": "development"
     }
   ]
 }

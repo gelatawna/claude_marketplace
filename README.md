@@ -6,6 +6,7 @@ Marketplace Name: **BDAP_DI_marketplace**
 
 Plugins:
 * **bdap-di** - The main plugin of the BDAP-DI ecosystem, providing various skills and agents e.g. for data integration tasks.
+* **session** - Session management for context persistence and cross-session communication. Can be installed independently.
 
 Claude References: 
 * https://code.claude.com/docs/en/discover-plugins, 
@@ -32,8 +33,9 @@ Or run the first steps at once like:
 * Add the **BDAP_DI_marketplace**
   * `/plugin marketplace add git@gitlab.com:tchibo-com/bi/sap-di/claude-di-marketplace.git`  
 
-* Install plugins from the marketplace like **bdap-di** plugin
+* Install plugins from the marketplace like **bdap-di** or **session** plugin
   * `/plugin install bdap-di@BDAP_DI_marketplace`
+  * `/plugin install session@BDAP_DI_marketplace`
 
 To register the marketplace manually, follow these steps:
 1. Ensure the marketplace is registered in your`~/.claude/plugins/known_marketplaces.json`:
