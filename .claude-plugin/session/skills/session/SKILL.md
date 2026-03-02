@@ -1,7 +1,7 @@
 ---
 name: session
 description: Manage conversation sessions for context persistence and cross-session communication
-argument-hint: start|resume|status|pause|complete|erase|rule|save|send|inbox|offload [args]
+argument-hint: start|resume|status|pause|complete|erase|rule|save|commit-msg|send|inbox|offload [args]
 disable-model-invocation: true
 allowed-tools:
   - Read(.claude/sessions/**)
@@ -44,6 +44,7 @@ Execute the session command: **$ARGUMENTS**
 | `erase [id]` | Delete a dead-end session |
 | `rule [topic]` | Interactive rule creation for CLAUDE.md |
 | `save` | Persist context snapshot |
+| `commit-msg` | Generate a suggested commit message from session context |
 | `send <repo> [msg]` | Send message to Claude session in another repo |
 | `inbox` | Check and read messages from other Claude sessions |
 | `offload` | Move branch sessions to archive repo before merge |
@@ -86,7 +87,9 @@ See [Migration from Old Structure](#migration-from-old-structure) section.
    - Read EACH session file completely
    - For each session, extract and internalize:
      - **Goal**: What the session aimed to accomplish
+     - **Plan**: Approach, steps, constraints (if present)
      - **Context sections**: Current Understanding, Codebase Understanding, Working Memory
+     - **Decisions**: Key decisions with alternatives and rationale
      - **Progress.Completed**: All completed items with their learnings
      - **Progress.Pending**: Items that were never finished
      - **Open Questions**: Unresolved questions from previous sessions
@@ -94,7 +97,8 @@ See [Migration from Old Structure](#migration-from-old-structure) section.
    - Build a cumulative understanding of:
      - What has been accomplished on this branch across all sessions
      - What codebase knowledge has been gathered
-     - What decisions were made and why
+     - What decisions were made and why (and by whom: human vs agent)
+     - What the plan is and which steps are done
      - What remains to be done
    - Present a **Branch History Recap** to the user:
      ```
@@ -104,7 +108,9 @@ See [Migration from Old Structure](#migration-from-old-structure) section.
 
      ### Session 1: {session-id} ({status})
      **Goal**: {goal summary}
+     **Plan Progress**: {checked/total steps, or "no plan" if absent}
      **Completed**: {bullet list of key accomplishments}
+     **Key Decisions**: {decisions with (human decision)/(agent default) tags}
      **Learnings**: {key insights discovered}
 
      ### Session 2: {session-id} ({status})
@@ -112,13 +118,18 @@ See [Migration from Old Structure](#migration-from-old-structure) section.
 
      ### Cumulative State
      **Total Progress**: {summary of what's been done across all sessions}
+     **Plan Status**: {overall plan step completion across sessions, if any}
      **Pending Items**: {items from any session that remain unfinished}
+     **Key Decisions**: {all decisions carried forward, with human/agent tags}
      **Open Questions**: {unresolved questions carried forward}
      **Key Codebase Knowledge**: {important file/architecture discoveries}
      ```
 6. Generate new session filename: `session-{YYYYMMDD}-{HHMMSS}-{rand3}.md`
-7. Create session file with YAML frontmatter
-   - Pre-populate Context sections with cumulative knowledge from previous sessions
+7. Create session file with YAML frontmatter and all required sections:
+   - **Plan**: Create with placeholder text (optional -- user fills in when ready)
+   - **Context**: Pre-populate with cumulative knowledge from previous sessions
+   - **Decisions**: Create empty section; carry forward any unresolved decisions from prior sessions
+   - **Progress**: Create with Completed/In Progress/Pending subsections
    - Carry forward unresolved Open Questions
    - Carry forward Pending items from previous sessions
 
@@ -135,8 +146,10 @@ See [Migration from Old Structure](#migration-from-old-structure) section.
    - If no id: find latest by `started_at` frontmatter or filename sort
 5. **Deep Context Loading** for target session:
    - Read entire session file
+   - Internalize Plan section (Approach, Steps checklist, Constraints) if present
    - Internalize Context section (Current Understanding, Codebase, Working Memory, Open Questions, Next Steps)
-   - Check Progress (Completed/In Progress/Pending) - includes learnings and context
+   - Internalize Decisions (what was decided, alternatives, rationale, human vs agent)
+   - Check Progress (Completed/In Progress/Pending) - includes learnings, context, and `(human decision)`/`(agent default)` annotations
 6. Present **Branch History Recap** (same format as `start` command) followed by target session details
 7. Update status to `active`, clear `ended_at`
 8. Ask: "Ready to continue. What would you like to focus on?"
@@ -148,17 +161,18 @@ See [Migration from Old Structure](#migration-from-old-structure) section.
 4. Display: session id (from filename), status, started_at, ended_at, goal summary
 
 ### pause
-1. Persist current context to session file
+1. Persist current context to session file (including Plan progress, Decisions, and annotations)
 2. Update status to `paused`
 3. Set `ended_at` timestamp
 4. Prompt for optional pause reason
 
 ### complete
-1. Persist final context snapshot
+1. Persist final context snapshot (including Plan, Decisions, and annotations)
 2. Update status to `completed`
 3. Set `ended_at` timestamp
 4. Auto-populate files changed: `git diff --name-only`
-5. Prompt for final summary
+5. If Plan has unchecked steps: mark them as abandoned with a note, or check them if completed
+6. Prompt for final summary
 
 ### send <repo> [message]
 Send a message to a Claude session running in another git repository.
@@ -234,10 +248,35 @@ rm .claude/sessions/_inbox/msg-*.md   # target repo after reading
 4. Remove session file
 
 ### save
-1. Update Context section with current knowledge
-2. Update Progress items
-3. Update Files Changed from git
-4. Keep status unchanged
+1. Update Plan section (check off completed steps, add new steps if needed)
+2. Update Context section with current knowledge
+3. Update Decisions section with any new decisions made
+4. Update Progress items (with `(human decision)`/`(agent default)` annotations)
+5. Update Files Changed from git
+6. Keep status unchanged
+
+### commit-msg
+Generate a suggested commit message based on the current session context.
+
+1. Verify an active session exists on the current branch; if not, report error
+2. Read the current session file
+3. Get the ticket ID from session frontmatter (`ticket` field)
+4. Run `git diff --name-only` to see staged and unstaged changes
+5. Compose a commit message:
+   - Format: `[{TICKET}] {concise summary}` (e.g., `[DI-1214] add interval-based extraction strategy`)
+   - If no ticket in frontmatter: omit the bracket prefix
+   - Summary derived from: Goal, Plan steps (if present), and Progress.Completed items
+   - Imperative mood, max ~72 characters
+   - Focus on the *what* and *why*, not the *how*
+6. Output the suggestion to the user (do **not** stage or commit):
+   ```
+   Suggested commit message:
+
+   [{TICKET}] {summary}
+
+   Copy and use with: git commit -m "[{TICKET}] {summary}"
+   ```
+7. If the diff shows multiple logical changes, suggest multiple commit messages (one per logical group)
 
 ### rule [topic]
 Interactive rule creation/refinement for `.claude/rules/` directory.
@@ -475,8 +514,17 @@ ended_at: {ISO-8601|null}
 
 ### Required Sections
 - **Goal**: What the session aims to accomplish
+- **Plan** *(optional)*: Structured plan for the session. Contains subsections:
+  - **Approach**: High-level approach description
+  - **Steps**: Checklist (`- [ ]` / `- [x]`) of concrete steps to execute
+  - **Constraints / Non-Goals**: What is explicitly out of scope
 - **Context**: Current Understanding, Codebase Understanding, Working Memory, Open Questions, Next Steps
-- **Progress**: Completed, In Progress, Pending (be verbose - capture learnings along the way)
+- **Decisions**: Key decisions made during the session. Each entry records:
+  - What was decided
+  - Alternatives considered (briefly)
+  - Rationale for the choice
+  - Who decided: `(human decision)` or `(agent default)`
+- **Progress**: Completed, In Progress, Pending (be verbose - capture learnings along the way). Annotate each item with `(human decision)` if the user explicitly directed the approach, or `(agent default)` if Claude chose autonomously. This helps future sessions understand which choices are load-bearing constraints vs. paths of least resistance that can be revisited.
 - **Files Changed**: List from git diff
 
 ## Reading Sessions (on resume)
@@ -484,12 +532,14 @@ ended_at: {ISO-8601|null}
 Read in order:
 1. Frontmatter → status, branch, ticket
 2. Goal → objective
-3. Context.Current Understanding → mental model
-4. Context.Codebase Understanding → explored files
-5. Context.Working Memory → key facts
-6. Context.Open Questions → unresolved items
-7. Context.Next Steps → where to pick up
-8. Progress → completed vs pending (includes learnings and context)
+3. Plan → approach, step checklist, constraints (if present)
+4. Context.Current Understanding → mental model
+5. Context.Codebase Understanding → explored files
+6. Context.Working Memory → key facts
+7. Context.Open Questions → unresolved items
+8. Context.Next Steps → where to pick up
+9. Decisions → what was decided, alternatives, rationale, human vs agent
+10. Progress → completed vs pending (includes learnings, context, and human/agent annotations)
 
 Only after loading all context, summarize to user and ask how to proceed.
 
