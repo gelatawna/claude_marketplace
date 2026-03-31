@@ -11,6 +11,7 @@ allowed-tools:
   - Edit(.claude/sessions/**)
   - Edit(.claude/rules/**)
   - Glob(.claude/sessions/**)
+  - Glob(.claude/rules/**)
   - Bash(git branch --show-current)
   - Bash(git diff --name-only:*)
   - Bash(ls -la .claude/sessions/**)
