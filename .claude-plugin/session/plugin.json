@@ -1,5 +1,5 @@
 {
   "name": "session",
-  "description": "Session management for context persistence and cross-session communication.",
-  "version": "0.2.0"
+  "description": "Session management with automatic cross-repo sync via hooks.",
+  "version": "0.3.0"
 }
