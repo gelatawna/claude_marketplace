@@ -21,14 +21,17 @@ fi
 SESSIONS_REPO_URL="${SESSIONS_REPO_URL:-git@gitlab.com:tchibo-com/bi/sap-di/claude-sessions-archive.git}"
 TMP_DIR="${SESSIONS_TMP_DIR:-/tmp/claude-sessions-sync-$$}"
 BRANCH=$(git branch --show-current 2>/dev/null || echo "")
-REPO_NAME=$(basename "$(git remote get-url origin 2>/dev/null)" .git 2>/dev/null || echo "unknown")
+REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
+REPO_NAME="${REMOTE_URL:+$(basename "$REMOTE_URL" .git)}"
+REPO_NAME="${REPO_NAME:-unknown}"
 
 if [[ -z "$BRANCH" ]]; then
     echo "Not on a git branch. Skipping session sync." >&2
     exit 0
 fi
 
-LOCAL_SESSIONS=".claude/sessions/$BRANCH"
+ORIG_DIR="$(pwd)"
+LOCAL_SESSIONS="$ORIG_DIR/.claude/sessions/$BRANCH"
 
 cleanup() {
     rm -rf "$TMP_DIR"
