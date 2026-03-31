@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/sync-sessions.sh pull",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sync_sessions.py pull",
             "timeout": 30
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/sync-sessions.sh push",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sync_sessions.py push",
             "timeout": 30
           }
         ]

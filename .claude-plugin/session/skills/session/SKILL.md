@@ -23,7 +23,7 @@ allowed-tools:
   - Bash(git commit:*)
   - Bash(date:*)
   - Bash(mv .claude/sessions/**)
-  - Bash(${CLAUDE_PLUGIN_ROOT}/hooks/sync-sessions.sh:*)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sync_sessions.py:*)
 ---
 
 # Session Management
@@ -124,7 +124,7 @@ Sessions are stored locally at: `.claude/sessions/{branch}/session-{TIMESTAMP}-{
 6. Keep status unchanged
 7. Sync to sessions repo:
    ```bash
-   ${CLAUDE_PLUGIN_ROOT}/hooks/sync-sessions.sh push
+   python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sync_sessions.py push
    ```
 8. Report: "Session saved and synced to sessions repo."
 
@@ -136,8 +136,8 @@ Sessions are stored locally at: `.claude/sessions/{branch}/session-{TIMESTAMP}-{
 5. Prompt for final summary
 6. Archive in sessions repo (moves from `ongoing/` to `archive/`, cleans up local files on success):
    ```bash
-   ${CLAUDE_PLUGIN_ROOT}/hooks/sync-sessions.sh push
-   ${CLAUDE_PLUGIN_ROOT}/hooks/sync-sessions.sh archive
+   python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sync_sessions.py push
+   python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sync_sessions.py archive
    ```
 7. Report: "Session completed and archived."
 
@@ -270,7 +270,7 @@ The session plugin registers two hooks that run automatically:
 | `SessionStart` | Claude Code session begins | Pull latest session from sessions repo |
 | `SessionEnd` | Claude Code session terminates | Push local session files to sessions repo |
 
-The hooks call `sync-sessions.sh` with `pull` or `push`. If the sessions repo is unreachable, the hooks fail silently and log a warning.
+The hooks call `sync_sessions.py` with `pull` or `push`. If the sessions repo is unreachable, the hooks fail silently and log a warning.
 
 **What this means for you:**
 - When you open Claude Code on a feature branch, the latest session context is already available locally
