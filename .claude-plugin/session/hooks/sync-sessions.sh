@@ -124,16 +124,19 @@ elif [[ "$MODE" == "archive" ]]; then
         echo "Nothing to archive."
     else
         git commit -m "Archive sessions for $BRANCH"
+        PUSH_OK=false
         if git push 2>/dev/null; then
-            echo "Sessions archived for $BRANCH."
+            PUSH_OK=true
         else
-            git pull --rebase 2>/dev/null && git push 2>/dev/null || {
-                echo "Warning: Could not push archive to sessions repo." >&2
+            git pull --rebase 2>/dev/null && git push 2>/dev/null && PUSH_OK=true || {
+                echo "Warning: Could not push archive to sessions repo. Local sessions preserved." >&2
             }
         fi
-    fi
 
-    # Clean up local sessions
-    rm -rf "$LOCAL_SESSIONS"
-    echo "Local sessions cleaned up."
+        if [[ "$PUSH_OK" == true ]]; then
+            echo "Sessions archived for $BRANCH."
+            rm -rf "$LOCAL_SESSIONS"
+            echo "Local sessions cleaned up."
+        fi
+    fi
 fi

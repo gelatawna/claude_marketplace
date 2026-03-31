@@ -134,16 +134,12 @@ Sessions are stored locally at: `.claude/sessions/{branch}/session-{TIMESTAMP}-{
 3. Set `ended_at` timestamp
 4. If Plan has unchecked steps: mark them as abandoned with a note, or check them if completed
 5. Prompt for final summary
-6. Archive in sessions repo (moves from `ongoing/` to `archive/`):
+6. Archive in sessions repo (moves from `ongoing/` to `archive/`, cleans up local files on success):
    ```bash
    ${CLAUDE_PLUGIN_ROOT}/hooks/sync-sessions.sh push
    ${CLAUDE_PLUGIN_ROOT}/hooks/sync-sessions.sh archive
    ```
-7. Clean up local session files:
-   ```bash
-   rm -rf .claude/sessions/{branch}/
-   ```
-8. Report: "Session completed and archived."
+7. Report: "Session completed and archived."
 
 ### commit-msg
 Generate a suggested commit message based on the current session context.
