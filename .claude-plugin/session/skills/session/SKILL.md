@@ -1,7 +1,7 @@
 ---
 name: session
 description: Manage conversation sessions with automatic cross-repo sync
-argument-hint: start|save|complete|rule|commit-msg [args]
+argument-hint: init|save|complete|rule|commit-msg [args]
 disable-model-invocation: true
 allowed-tools:
   - Read(.claude/sessions/**)
@@ -43,7 +43,7 @@ This means that when you start working on `feat/DI-2826` in `sap_di_etl_monorepo
 
 | Command | Action |
 |---------|--------|
-| `start` | Create new session on current branch, recap previous context |
+| `init` | Initialize or resume a session on current branch, recap previous context |
 | `save` | Persist context snapshot and sync to sessions repo |
 | `complete` | Mark session completed, move to archive |
 | `rule [topic]` | Interactive rule creation for CLAUDE.md |
@@ -83,7 +83,7 @@ Sessions are stored locally at: `.claude/sessions/{branch}/session-{TIMESTAMP}-{
 
 ## Command Behaviors
 
-### start
+### init
 1. Check for existing session files in `.claude/sessions/{branch}/`
    - These may have been pulled by the `SessionStart` hook from the sessions repo
    - Or may be left over from a previous local session

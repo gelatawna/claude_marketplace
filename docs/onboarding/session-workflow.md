@@ -15,7 +15,7 @@ How the DI team uses Claude Code sessions to maintain context across conversatio
 1. Open Claude Code on your feature branch
    -> Hook pulls latest session context automatically
 
-2. /session start
+2. /session init
    -> Shows recap of previous work, creates new session
 
 3. Do your work...
@@ -65,13 +65,13 @@ This means you never manually copy files between repos. The context flows automa
 
 | Command | When to use |
 |---------|-------------|
-| `/session start` | Beginning of every work session. Reads previous context, creates a new session file. |
+| `/session init` | Beginning of every work session. Reads previous context, creates a new session file. |
 | `/session save` | Mid-session checkpoint. Persists current context and syncs to the sessions repo. |
 | `/session complete` | Feature is done. Marks session completed and moves to `archive/`. |
 | `/session rule [topic]` | Capture a convention or decision as a persistent rule in `.claude/rules/`. |
 | `/session commit-msg` | Generate a commit message from session context. |
 
-### /session start
+### /session init
 
 Always run this at the beginning of a Claude Code conversation on a feature branch. It:
 
@@ -122,7 +122,7 @@ This feature required changes in both `relational-engine` (framework support for
 
 **Day 1 -- Alice in sap_di_etl_monorepo:**
 ```
-/session start
+/session init
 -> "No previous sessions for this branch. Starting fresh."
 
 Goal: Create IPRODUCT ORM model for Datasphere replication
@@ -138,7 +138,7 @@ Hits a blocker: connection ID validation failure in the framework.
 ```
 (SessionStart hook pulls the session from Day 1)
 
-/session start
+/session init
 -> "Last session: worked in sap_di_etl_monorepo"
 -> Shows: ORM model done, blocked on connection IDs, framework needs REPLICATE support
 
@@ -154,7 +154,7 @@ Close Claude Code
 ```
 (SessionStart hook pulls the session from Day 2)
 
-/session start
+/session init
 -> "Last session: worked in relational-engine"
 -> Shows: Framework REPLICATE support added, ready for deployment testing
 
@@ -222,7 +222,7 @@ Key conventions:
 
 ## Best Practices
 
-**Always run `/session start`** at the beginning of work. Even if you think it's a quick fix. Context accumulates.
+**Always run `/session init`** at the beginning of work. Even if you think it's a quick fix. Context accumulates.
 
 **Run `/session save` before switching repos.** The SessionEnd hook is a safety net, but an explicit save ensures your context is complete (the hook pushes whatever state the file is in, which may not include your latest progress if Claude hasn't updated it yet).
 
@@ -255,7 +255,11 @@ This repository uses shared session management across `relational-engine` and `s
 
 - On startup, check `.claude/sessions/` for session files pulled by the SessionStart hook
 - If a session file exists for the current branch, read it before doing any work -- it contains cumulative context, decisions, and progress from all previous sessions (including work done in the other repo)
-- Use `/session start` to formally open a session with a recap and create a new session file
+- Use `/session init` to formally open a session with a recap and create a new session file
 - Use `/session save` to persist current context and sync to the central sessions repo
 - Session files use `{repo}/relative/path` format for all file paths (e.g., `relational-engine/tchibo_relational_engine/orm_models/...`)
 ```
+
+## Future Improvements
+
+**Automatic session start via agent hook**: Currently `/session init` must be run manually to create a session file and recap previous context. This could be automated with an agent-type `SessionStart` hook that reads the pulled session, presents a recap, and creates a new session file -- removing the manual step entirely. The trade-off is 30-60 seconds of latency on every session start (even quick questions), plus API cost for the LLM call. A possible middle ground: only auto-start if a previous session file was pulled (skip for fresh branches with no history).

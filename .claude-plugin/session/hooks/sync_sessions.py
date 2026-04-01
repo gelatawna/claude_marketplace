@@ -106,16 +106,17 @@ def cmd_push(branch: str, repo_name: str, local_sessions: Path, tmp_dir: Path) -
 
     diff = git("diff", "--cached", "--quiet", cwd=str(tmp_dir), check=False)
     if diff.returncode == 0:
-        print("Sessions already in sync.")
+        log("PUSH no diff, cleaning up local sessions")
+        shutil.rmtree(local_sessions)
         return
 
     git("commit", "-m", f"Sync session from {repo_name}/{branch}", cwd=str(tmp_dir))
 
     if git_push_with_retry(str(tmp_dir)):
-        print("Session synced to sessions repo.")
+        log("PUSH success, cleaning up local sessions")
         shutil.rmtree(local_sessions)
-        print("Local sessions cleaned up.")
     else:
+        log("PUSH failed, preserving local sessions")
         print("Warning: Could not push to sessions repo. Local sessions preserved.", file=sys.stderr)
 
 
