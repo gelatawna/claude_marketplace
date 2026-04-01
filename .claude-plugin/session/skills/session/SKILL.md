@@ -66,12 +66,19 @@ Extract ticket from branch using pattern: `(DI-\d+|BIFT5-\d+)`
 basename $(git remote get-url origin) .git
 ```
 
-### 4. Session Path
+### 4. Get Current Timestamp
+Always run this to get the real current time for session filenames and frontmatter:
+```bash
+date +%Y%m%d-%H%M%S
+```
+Use the output for the session filename and `started_at` field. Never guess or hardcode timestamps.
+
+### 5. Session Path
 Sessions are stored locally at: `.claude/sessions/{branch}/session-{TIMESTAMP}-{RAND}.md`
 
 **Naming format**: `session-{YYYYMMDD}-{HHMMSS}-{rand3}.md`
 - Example: `session-20260128-143022-x7k.md`
-- Timestamp from session start time
+- Timestamp from step 4
 - 3-character random suffix for collision resistance
 
 ## Command Behaviors

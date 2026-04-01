@@ -18,7 +18,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+# TODO: revert "feat/cross-repo-session-sync" to "main" after sessions-archive branch is merged
 DEFAULT_REPO_URL = "git@gitlab.com:tchibo-com/bi/sap-di/claude-sessions-archive.git"
+DEFAULT_REPO_BRANCH = "feat/cross-repo-session-sync"
 
 
 def git(*args: str, cwd: str | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -44,8 +46,8 @@ def get_repo_name() -> str:
     return Path(url).stem.removesuffix(".git") if "/" not in Path(url).stem else Path(url).name.removesuffix(".git")
 
 
-def clone_sessions_repo(repo_url: str, tmp_dir: Path) -> bool:
-    result = git("clone", "--depth", "1", "--single-branch", "--branch", "main", repo_url, str(tmp_dir), check=False)
+def clone_sessions_repo(repo_url: str, tmp_dir: Path, branch: str = DEFAULT_REPO_BRANCH) -> bool:
+    result = git("clone", "--depth", "1", "--single-branch", "--branch", branch, repo_url, str(tmp_dir), check=False)
     if result.returncode != 0:
         print("Warning: Could not reach sessions repo. Session sync skipped.", file=sys.stderr)
         return False
@@ -111,8 +113,10 @@ def cmd_push(branch: str, repo_name: str, local_sessions: Path, tmp_dir: Path) -
 
     if git_push_with_retry(str(tmp_dir)):
         print("Session synced to sessions repo.")
+        shutil.rmtree(local_sessions)
+        print("Local sessions cleaned up.")
     else:
-        print("Warning: Could not push to sessions repo. Will retry next sync.", file=sys.stderr)
+        print("Warning: Could not push to sessions repo. Local sessions preserved.", file=sys.stderr)
 
 
 def cmd_archive(branch: str, local_sessions: Path, tmp_dir: Path) -> None:
@@ -150,12 +154,22 @@ def cmd_archive(branch: str, local_sessions: Path, tmp_dir: Path) -> None:
         print("Warning: Could not push archive to sessions repo. Local sessions preserved.", file=sys.stderr)
 
 
+LOG_FILE = Path.home() / ".claude" / "session-sync.log"
+
+
+def log(msg: str) -> None:
+    from datetime import datetime
+    with LOG_FILE.open("a") as f:
+        f.write(f"[{datetime.now().astimezone().isoformat()}] {msg}\n")
+
+
 def main() -> None:
     if len(sys.argv) != 2 or sys.argv[1] not in ("pull", "push", "archive"):
         print("Usage: sync_sessions.py <pull|push|archive>", file=sys.stderr)
         sys.exit(1)
 
     mode = sys.argv[1]
+    log(f"START mode={mode} cwd={Path.cwd()}")
 
     branch = get_branch()
     if not branch:
@@ -178,8 +192,12 @@ def main() -> None:
             cmd_push(branch, repo_name, local_sessions, tmp_dir)
         elif mode == "archive":
             cmd_archive(branch, local_sessions, tmp_dir)
+    except Exception as e:
+        log(f"ERROR {e}")
+        raise
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
+        log(f"END mode={mode}")
 
 
 if __name__ == "__main__":

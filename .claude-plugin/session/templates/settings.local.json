@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sync_sessions.py pull",
+            "command": "python3 .claude/skills/session/sync_sessions.py pull",
             "timeout": 30
           }
         ]
@@ -23,7 +23,7 @@
           },
           {
             "type": "command",
-            "command": "nohup python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sync_sessions.py push </dev/null >/dev/null 2>&1 &",
+            "command": "nohup python3 .claude/skills/session/sync_sessions.py push </dev/null >/dev/null 2>&1 &",
             "timeout": 30
           }
         ]
