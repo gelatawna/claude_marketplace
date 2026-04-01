@@ -122,13 +122,15 @@ Sessions are stored locally at: `.claude/sessions/{branch}/session-{TIMESTAMP}-{
 6. Ask: "What would you like to focus on?"
 
 ### save
-1. Update Plan section (check off completed steps, add new steps if needed)
-2. Update Context section with current knowledge
+1. Get current timestamp: `date +%Y-%m-%dT%H:%M:%S`
+2. Set `updated_at` in frontmatter to current timestamp
+3. Update Plan section (check off completed steps, add new steps if needed)
+4. Update Context section with current knowledge
    - File paths use `{repo}/relative/path` format (e.g., `relational-engine/tchibo_relational_engine/orm_models/deferred_reflections.py`)
-3. Update Decisions section with any new decisions made
-4. Update Progress items (with `(human decision)`/`(agent default)` annotations)
-5. Update Files Changed from git: `git diff --name-only`
-6. Keep status unchanged
+5. Update Decisions section with any new decisions made
+6. Update Progress items (with `(human decision)`/`(agent default)` annotations)
+7. Update Files Changed from git: `git diff --name-only`
+8. Keep status unchanged
 7. Sync to sessions repo:
    ```bash
    python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sync_sessions.py push
@@ -136,9 +138,10 @@ Sessions are stored locally at: `.claude/sessions/{branch}/session-{TIMESTAMP}-{
 8. Report: "Session saved and synced to sessions repo."
 
 ### complete
-1. Persist final context snapshot (same as save steps 1-5)
+1. Persist final context snapshot (same as save steps 1-8)
 2. Set `status: completed`
-3. Set `ended_at` timestamp
+3. Set `ended_at` to current timestamp
+4. Set `updated_at` to current timestamp
 4. If Plan has unchecked steps: mark them as abandoned with a note, or check them if completed
 5. Prompt for final summary
 6. Archive in sessions repo (moves from `ongoing/` to `archive/`, cleans up local files on success):
@@ -232,7 +235,8 @@ ticket_url: {JIRA-URL}        # Optional
 repo: {repository-name}       # e.g., relational-engine or sap_di_etl_monorepo
 status: active|completed|abandoned
 started_at: {ISO-8601}
-ended_at: {ISO-8601|null}
+updated_at: {ISO-8601|null}   # Set on every save (manual or automatic)
+ended_at: {ISO-8601|null}     # Set only by /session complete
 ---
 ```
 
