@@ -7,6 +7,7 @@ How the DI team uses Claude Code sessions to maintain context across conversatio
 1. Claude Code installed and configured
 2. The `session` plugin installed from `claude-di-marketplace`
 3. Git SSH access to `claude-sessions-archive` (`git@gitlab.com:tchibo-com/bi/sap-di/claude-sessions-archive.git`)
+4. Session rules file added to your repository (see [Setup](#setup) below)
 
 ## Quick Start
 
@@ -240,3 +241,21 @@ Key conventions:
 **Session file seems stale**: Run `/session save` to force a sync. The SessionEnd hook pushes whatever state the file is in, which may be outdated if Claude hasn't run a save recently.
 
 **Want to see the sessions repo directly**: Browse `https://gitlab.com/tchibo-com/bi/sap-di/claude-sessions-archive` or clone it locally.
+
+## Setup
+
+After installing the session plugin, add a rules file to each repository that uses session management. This tells Claude Code about the session workflow on every startup. See [Claude Code rules](https://code.claude.com/docs/en/memory#organize-rules-with-claude/rules/) for details.
+
+Create `.claude/rules/session_management.md`:
+
+```markdown
+# Session Management
+
+This repository uses shared session management across `relational-engine` and `sap_di_etl_monorepo`.
+
+- On startup, check `.claude/sessions/` for session files pulled by the SessionStart hook
+- If a session file exists for the current branch, read it before doing any work -- it contains cumulative context, decisions, and progress from all previous sessions (including work done in the other repo)
+- Use `/session start` to formally open a session with a recap and create a new session file
+- Use `/session save` to persist current context and sync to the central sessions repo
+- Session files use `{repo}/relative/path` format for all file paths (e.g., `relational-engine/tchibo_relational_engine/orm_models/...`)
+```
