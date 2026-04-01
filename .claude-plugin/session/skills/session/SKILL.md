@@ -110,16 +110,20 @@ Sessions are stored locally at: `.claude/sessions/{branch}/session-{TIMESTAMP}-{
      **Pending**: {items that remain unfinished}
      **Open Questions**: {unresolved questions}
      ```
-3. If no sessions found, report: "No previous sessions for this branch. Starting fresh."
-4. Generate new session filename: `session-{YYYYMMDD}-{HHMMSS}-{rand3}.md`
-5. Create session file with YAML frontmatter and all required sections:
+3. **Delete the old session file(s)** after reading. Only one session file should exist at a time:
+   ```bash
+   rm .claude/sessions/{branch}/session-*.md
+   ```
+4. If no sessions found, report: "No previous sessions for this branch. Starting fresh."
+5. Generate new session filename: `session-{YYYYMMDD}-{HHMMSS}-{rand3}.md`
+6. Create session file with YAML frontmatter and all required sections:
    - **repo**: Set to current repository name
    - **Plan**: Carry forward from previous session or create placeholder
    - **Context**: Pre-populate with knowledge from previous session
    - **Decisions**: Carry forward unresolved decisions
    - **Progress**: Carry forward pending items
    - Open Questions: Carry forward unresolved questions
-6. Ask: "What would you like to focus on?"
+7. Ask: "What would you like to focus on?"
 
 ### save
 1. Get current timestamp: `date +%Y-%m-%dT%H:%M:%S`

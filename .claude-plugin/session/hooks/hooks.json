@@ -17,11 +17,6 @@
         "matcher": "",
         "hooks": [
           {
-            "type": "agent",
-            "prompt": "You are a session persistence agent. Your ONLY job is to update and save the active session file before the session ends.\n\n## Steps\n\n1. Run `git branch --show-current` to get the current branch.\n2. Run `date +%Y-%m-%dT%H:%M:%S` to get the current local timestamp.\n3. Find the session file: look in `.claude/sessions/{branch}/` for `session-*.md` files. Pick the latest one by filename sort. If none exist, exit -- there is nothing to save.\n4. Read the session file.\n5. Read the conversation transcript at the path provided in your input to understand what was accomplished in this session.\n6. Update the session file frontmatter: set `updated_at` to the timestamp from step 2. This is REQUIRED -- every saved session must have `updated_at` set. Do NOT set `ended_at` (that is only set by the /session complete command).\n7. Update the session file body:\n   - Update **Context** sections (Current Understanding, Codebase Understanding, Working Memory, Open Questions, Next Steps) based on what was discussed and learned\n   - Update **Progress** (move items from Pending/In Progress to Completed with learnings, add new pending items discovered)\n   - Update **Decisions** with any new decisions made (tag as `(human decision)` or `(agent default)`)\n   - Update **Files Changed** from `git diff --name-only`\n   - Prefix all file paths with the repo name (e.g., `relational-engine/path/to/file.py`)\n   - Keep status as `active` (the session may be resumed later)\n8. Write the updated session file.\n9. Do NOT run any sync/push scripts. A separate hook handles that.\n\n## Rules\n- Setting `updated_at` in frontmatter is mandatory\n- Do NOT set `ended_at` -- only the /session complete command sets that\n- Be concise but complete in context updates\n- Preserve all existing content that is still relevant\n- Do not create new session files, only update existing ones\n- If no session file exists, do nothing",
-            "timeout": 120
-          },
-          {
             "type": "command",
             "command": "nohup python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sync_sessions.py push </dev/null >/dev/null 2>&1 &",
             "timeout": 30
