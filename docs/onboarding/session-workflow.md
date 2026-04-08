@@ -20,11 +20,20 @@ How the DI team uses Claude Code sessions to maintain context across conversatio
 
 3. Do your work...
 
-4. Close Claude Code (or /session save for mid-session checkpoint)
-   -> Hook pushes session to central repo automatically
+4. /session save    <-- IMPORTANT: run this before closing
+   -> Claude updates the session file with current context and pushes
+
+5. Close Claude Code
+   -> Hook pushes the session file to the central repo
 
 Done. Your colleague can now pick up where you left off.
 ```
+
+> **Note:** You must run `/session save` manually before closing. Automatic
+> session compaction (updating the file from the conversation on close) is
+> not yet working -- the SessionEnd hook only pushes the file in whatever
+> state it was last saved in. If you forget to save, the session file gets
+> pushed with its state at `/session init` time, losing in-session progress.
 
 ## What Are Sessions?
 
@@ -57,9 +66,15 @@ Two Claude Code hooks handle synchronization automatically:
 **SessionEnd hook** (when you close Claude Code):
 - Checks if a local session file exists
 - Pushes it to `ongoing/` in the sessions repo
+- Runs detached (survives `Ctrl+C`), cleans up local files after successful sync
 - No-op if no session was started
 
 This means you never manually copy files between repos. The context flows automatically.
+
+> **Limitation:** The SessionEnd hook only pushes the file as-is. It does NOT
+> update the file with context from the current conversation. You must run
+> `/session save` manually before closing to capture in-session progress.
+> See [Future Improvements](#future-improvements) for the planned fix.
 
 ## Commands
 
@@ -175,7 +190,8 @@ ticket_url: https://tchibo.atlassian.net/browse/DI-2826
 repo: relational-engine
 status: active
 started_at: 2026-03-25T07:43:32
-ended_at: null
+updated_at: 2026-03-25T08:15:00   # set on every /session save
+ended_at: null                     # set only by /session complete
 ---
 
 ## Goal
@@ -224,7 +240,7 @@ Key conventions:
 
 **Always run `/session init`** at the beginning of work. Even if you think it's a quick fix. Context accumulates.
 
-**Run `/session save` before switching repos.** The SessionEnd hook is a safety net, but an explicit save ensures your context is complete (the hook pushes whatever state the file is in, which may not include your latest progress if Claude hasn't updated it yet).
+**Run `/session save` before closing or switching repos.** This is not optional right now -- the SessionEnd hook only pushes the file, it does not update it from the conversation. Without a save, you lose all in-session progress.
 
 **Be verbose in sessions.** Write more context than you think is needed. The next person reading this session (or Claude in the next conversation) doesn't have your mental model.
 
@@ -238,7 +254,7 @@ Key conventions:
 
 **No session pulled but one should exist**: The hook only looks in `ongoing/{branch}/`. If the branch name doesn't match exactly (e.g., different suffix), the hook won't find it. Branch names must match across repos for auto-sync to work.
 
-**Session file seems stale**: Run `/session save` to force a sync. The SessionEnd hook pushes whatever state the file is in, which may be outdated if Claude hasn't run a save recently.
+**Session file seems stale / missing recent progress**: You probably closed Claude Code without running `/session save`. The SessionEnd hook pushes the file as-is, so any context Claude hadn't written to the file is lost. Always `/session save` before closing.
 
 **Want to see the sessions repo directly**: Browse `https://gitlab.com/tchibo-com/bi/sap-di/claude-sessions-archive` or clone it locally.
 
@@ -262,4 +278,6 @@ This repository uses shared session management across `relational-engine` and `s
 
 ## Future Improvements
 
-**Automatic session start via agent hook**: Currently `/session init` must be run manually to create a session file and recap previous context. This could be automated with an agent-type `SessionStart` hook that reads the pulled session, presents a recap, and creates a new session file -- removing the manual step entirely. The trade-off is 30-60 seconds of latency on every session start (even quick questions), plus API cost for the LLM call. A possible middle ground: only auto-start if a previous session file was pulled (skip for fresh branches with no history).
+**Automatic session compaction on close (priority)**: The SessionEnd hook should update the session file from the conversation transcript before pushing -- removing the need for manual `/session save`. This was designed as an agent-type hook (LLM-powered) but never fired from project settings in testing. The hook code is preserved on the `feat/agent-hook-wip` branch. Once debugged, developers can close Claude Code without worrying about losing in-session progress.
+
+**Automatic session init on startup**: Currently `/session init` must be run manually to create a new session file and recap previous context. This could be automated with an agent-type `SessionStart` hook. The trade-off is 30-60 seconds of latency on every session start (even quick questions), plus API cost. A reasonable middle ground: only auto-init if a previous session file was pulled (skip for fresh branches with no history).
