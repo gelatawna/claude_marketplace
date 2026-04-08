@@ -71,12 +71,12 @@ def cmd_pull(branch: str, local_sessions: Path, tmp_dir: Path) -> None:
     ongoing_dir = tmp_dir / "ongoing" / branch
 
     if not ongoing_dir.is_dir():
-        print("No existing sessions for this branch. Use /session start to create one.")
+        print("No existing sessions for this branch. Use /session init to create one.")
         return
 
     session_files = sorted(ongoing_dir.glob("session-*.md"))
     if not session_files:
-        print("No existing sessions for this branch. Use /session start to create one.")
+        print("No existing sessions for this branch. Use /session init to create one.")
         return
 
     latest = session_files[-1]
@@ -85,7 +85,7 @@ def cmd_pull(branch: str, local_sessions: Path, tmp_dir: Path) -> None:
 
     print(f"Found {len(session_files)} session(s) for {branch} in sessions repo.")
     print(f"Pulled latest ({latest.name}) into .claude/sessions/.")
-    print("Use /session start to open a new session.")
+    print("Use /session init to open a new session.")
 
 
 def cmd_push(branch: str, repo_name: str, local_sessions: Path, tmp_dir: Path) -> None:
