@@ -24,16 +24,17 @@ How the DI team uses Claude Code sessions to maintain context across conversatio
    -> Claude updates the session file with current context and pushes
 
 5. Close Claude Code
-   -> Hook pushes the session file to the central repo
+   -> Hook pushes the session file to the central repo and cleans up local session files
 
 Done. Your colleague can now pick up where you left off.
 ```
 
 > **Note:** You must run `/session save` manually before closing. Automatic
 > session compaction (updating the file from the conversation on close) is
-> not yet working -- the SessionEnd hook only pushes the file in whatever
+> not implemented -- the SessionEnd hook only pushes the file in whatever
 > state it was last saved in. If you forget to save, the session file gets
 > pushed with its state at `/session init` time, losing in-session progress.
+> You can always resume a Claude Code session to save your context.
 
 ## What Are Sessions?
 
@@ -60,12 +61,14 @@ Two Claude Code hooks handle synchronization automatically:
 **SessionStart hook** (when you open Claude Code):
 - Detects your current branch and ticket
 - Pulls the latest session from `ongoing/` in the sessions repo
-- Copies it to your local `.claude/sessions/{branch}/`
+- If `ongoing/` is empty, falls back to `archive/` -- so reopening a completed branch recovers its history
+- Copies the file to your local `.claude/sessions/{branch}/`
 - Prints what it found (or "no sessions" for a fresh branch)
 
 **SessionEnd hook** (when you close Claude Code):
 - Checks if a local session file exists
 - Pushes it to `ongoing/` in the sessions repo
+- Warns if another session was pushed to the same branch while you were working (concurrent work by a colleague)
 - Runs detached (survives `Ctrl+C`), cleans up local files after successful sync
 - No-op if no session was started
 
@@ -74,7 +77,7 @@ This means you never manually copy files between repos. The context flows automa
 > **Limitation:** The SessionEnd hook only pushes the file as-is. It does NOT
 > update the file with context from the current conversation. You must run
 > `/session save` manually before closing to capture in-session progress.
-> See [Future Improvements](#future-improvements) for the planned fix.
+> See [Possible Improvements](#possible-improvements) for the planned fix.
 
 ## Commands
 
@@ -83,6 +86,7 @@ This means you never manually copy files between repos. The context flows automa
 | `/session init` | Beginning of every work session. Reads previous context, creates a new session file. |
 | `/session save` | Mid-session checkpoint. Persists current context and syncs to the sessions repo. |
 | `/session complete` | Feature is done. Marks session completed and moves to `archive/`. |
+| `/session status` | Read-only summary of local + remote session state for this branch. No side effects. |
 | `/session rule [topic]` | Capture a convention or decision as a persistent rule in `.claude/rules/`. |
 | `/session commit-msg` | Generate a commit message from session context. |
 
@@ -126,6 +130,27 @@ Run this when the feature branch is done (ready to merge). It:
 - Marks the session as `completed`
 - Moves sessions from `ongoing/` to `archive/` in the sessions repo
 - Cleans up local session files
+
+### /session status
+
+Read-only inspection. Run this whenever you want to see the current state without side effects. Useful for:
+- Checking whether your last save actually synced
+- Seeing how fresh the pulled session is (its `updated_at`)
+- Spotting concurrent work by a colleague (extra sessions in `ongoing/` you didn't create)
+- Confirming a branch has no session history before starting fresh
+
+Example output:
+```
+Branch: feat/DI-2826_s4_iproduct_rf
+
+Local:
+  session-20260401-143022-m4r.md  (status: active, updated_at: 2026-04-01T15:30:10)
+
+Remote (sessions repo):
+  ongoing/feat/DI-2826_s4_iproduct_rf/: 3 session(s)
+  archive/feat/DI-2826_s4_iproduct_rf/: 0 session(s)
+  Latest ongoing: session-20260401-143022-m4r.md (repo: relational-engine, updated_at: 2026-04-01T15:30:10)
+```
 
 ## Cross-Repo Workflow
 
@@ -262,22 +287,17 @@ Key conventions:
 
 After installing the session plugin, add a rules file to each repository that uses session management. This tells Claude Code about the session workflow on every startup. See [Claude Code rules](https://code.claude.com/docs/en/memory#organize-rules-with-claude/rules/) for details.
 
-Create `.claude/rules/session_management.md`:
+Copy `.claude-plugin/session/templates/session_management.md` from this repository into your project's `.claude/rules/session_management.md`. The template covers:
 
-```markdown
-# Session Management
+- How to use session files pulled by the SessionStart hook
+- When to run `/session init`, `/session save`, `/session complete`
+- Cross-repo file path convention (`{repo}/relative/path`)
+- Sibling repository awareness (relative path, when to read, when to request modifications)
 
-This repository uses shared session management across `relational-engine` and `sap_di_etl_monorepo`.
+Keeping the template as the single source of truth means any future refinements to the workflow are picked up by copying the updated template into your project.
 
-- On startup, check `.claude/sessions/` for session files pulled by the SessionStart hook
-- If a session file exists for the current branch, read it before doing any work -- it contains cumulative context, decisions, and progress from all previous sessions (including work done in the other repo)
-- Use `/session init` to formally open a session with a recap and create a new session file
-- Use `/session save` to persist current context and sync to the central sessions repo
-- Session files use `{repo}/relative/path` format for all file paths (e.g., `relational-engine/tchibo_relational_engine/orm_models/...`)
-```
+## Possible Improvements
 
-## Future Improvements
-
-**Automatic session compaction on close (priority)**: The SessionEnd hook should update the session file from the conversation transcript before pushing -- removing the need for manual `/session save`. This was designed as an agent-type hook (LLM-powered) but never fired from project settings in testing. The hook code is preserved on the `feat/agent-hook-wip` branch. Once debugged, developers can close Claude Code without worrying about losing in-session progress.
+**Automatic session compaction on close**: The SessionEnd hook should update the session file from the conversation transcript before pushing -- removing the need for manual `/session save`. This was designed as an agent-type hook (LLM-powered) but never fired from project settings in testing. The hook code is preserved on the `feat/agent-hook-wip` branch. Once debugged, developers can close Claude Code without worrying about losing in-session progress.
 
 **Automatic session init on startup**: Currently `/session init` must be run manually to create a new session file and recap previous context. This could be automated with an agent-type `SessionStart` hook. The trade-off is 30-60 seconds of latency on every session start (even quick questions), plus API cost. A reasonable middle ground: only auto-init if a previous session file was pulled (skip for fresh branches with no history).
