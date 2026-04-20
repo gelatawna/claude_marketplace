@@ -1,7 +1,7 @@
 ---
 name: session
 description: Manage conversation sessions with automatic cross-repo sync
-argument-hint: init|save|complete|rule|commit-msg [args]
+argument-hint: init|save|complete|status|rule|commit-msg [args]
 disable-model-invocation: true
 allowed-tools:
   - Read(.claude/sessions/**)
@@ -46,6 +46,7 @@ This means that when you start working on `feat/DI-2826` in `sap_di_etl_monorepo
 | `init` | Initialize or resume a session on current branch, recap previous context |
 | `save` | Persist context snapshot and sync to sessions repo |
 | `complete` | Mark session completed, move to archive |
+| `status` | Read-only summary of local + remote session state for this branch |
 | `rule [topic]` | Interactive rule creation for CLAUDE.md |
 | `commit-msg` | Generate a suggested commit message from session context |
 
@@ -154,6 +155,19 @@ Sessions are stored locally at: `.claude/sessions/{branch}/session-{TIMESTAMP}-{
    python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sync_sessions.py archive
    ```
 7. Report: "Session completed and archived."
+
+### status
+Read-only inspection of the current session state. Does not modify any files.
+
+1. Run the sync script in status mode:
+   ```bash
+   python3 ${CLAUDE_PLUGIN_ROOT}/hooks/sync_sessions.py status
+   ```
+2. Relay the output to the user verbatim. The script reports:
+   - Local session files and their `updated_at` / `status`
+   - Number of sessions in `ongoing/` and `archive/` in the central repo
+   - Latest ongoing session with its `updated_at` and `repo`
+3. If the user asks for more detail on a specific session, read its contents from `.claude/sessions/{branch}/` if it exists locally.
 
 ### commit-msg
 Generate a suggested commit message based on the current session context.
