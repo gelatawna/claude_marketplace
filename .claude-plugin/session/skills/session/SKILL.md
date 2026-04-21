@@ -48,7 +48,25 @@ The feature often spans both `relational-engine` and `sap_di_etl_monorepo`. Both
 
 **Reading from the sibling**: always read freely without asking when session context references files prefixed with the sibling's name (e.g., `sap_di_etl_monorepo/data_intelligence/...`), when you need to verify an assumption about code in the other repo, or to understand caller/callee relationships.
 
-**Modifying the sibling**: if work in the current repo requires a coordinated change in the sibling, describe the specific change to the user and wait for explicit approval before editing. Record the change in the session's **Files Changed** section using the sibling's `{repo}/path` prefix.
+**Modifying the sibling**: if work in the current repo requires a coordinated change in the sibling:
+
+1. First verify the sibling is on the same branch: `git -C ../{sibling-repo} branch --show-current`. If it isn't, stop and tell the user -- coordinated changes must land on the same feature branch in both repos.
+2. Describe the specific change to the user and wait for explicit approval.
+3. Once approved, edit the sibling.
+
+**Files Changed must cover both repos**: when a session touches both repos, the session's **Files Changed** section must list files from both, grouped by repo with `{repo}/relative/path` prefix:
+
+```
+## Files Changed
+
+### relational-engine
+- relational-engine/tchibo_relational_engine/orm_models/deferred_reflections.py
+
+### sap_di_etl_monorepo
+- sap_di_etl_monorepo/data_intelligence/orm_models/datasphere_raw/iproduct.py
+```
+
+This makes the cross-repo scope explicit to reviewers and to the next session.
 
 ## Commands Reference
 
@@ -315,5 +333,5 @@ The hooks call `sync_sessions.py` with `pull` or `push`. If the sessions repo is
 **What this means for you:**
 - When you open Claude Code on a feature branch, the latest session context is already available locally
 - When you close Claude Code, your session state is automatically pushed to the central repo
-- When your colleague opens the same feature branch (even in a different repo), they see your latest context
-- You never need to manually copy session files between repos
+- When your colleague opens the same feature branch (even in the sibling repo), they see your latest context
+- You never need to manually copy session files & context between repos

@@ -27,7 +27,24 @@ Read-only access is cheap. Always read from the sibling without asking when:
 
 If work in the current repo requires a coordinated change in the sibling (e.g., an API signature change in `relational-engine` breaks a consumer in `sap_di_etl_monorepo`):
 
-1. **Identify** the specific change needed
-2. **Describe** it to the user: what file, what change, and why it's required
-3. **Wait** for explicit approval before editing the sibling
-4. Once approved, edit the sibling and record it in the session's **Files Changed** section using the sibling's `{repo}/path` prefix
+1. **Verify the sibling is on the same branch.** Run `git -C ../{sibling-repo} branch --show-current`. If the sibling is on a different branch, stop and tell the user: coordinated changes must land on the same feature branch in both repos so the work is reviewable as a unit and the session history stays aligned.
+2. **Identify** the specific change needed
+3. **Describe** it to the user: what file, what change, and why it's required
+4. **Wait** for explicit approval before editing the sibling
+5. Once approved, edit the sibling and record it in the session's **Files Changed** section using the sibling's `{repo}/path` prefix
+
+### Files Changed must cover both repos
+
+When a session touches both repos, the session's **Files Changed** section must list files from both, each with its `{repo}/relative/path` prefix. Group them explicitly:
+
+```
+## Files Changed
+
+### relational-engine
+- relational-engine/tchibo_relational_engine/orm_models/deferred_reflections.py
+
+### sap_di_etl_monorepo
+- sap_di_etl_monorepo/data_intelligence/orm_models/datasphere_raw/iproduct.py
+```
+
+This makes the cross-repo scope explicit to reviewers and to the next session that picks up this context.
