@@ -34,10 +34,21 @@ Execute the session command: **$ARGUMENTS**
 
 Sessions are stored centrally in the **sessions repository** (`claude-sessions-archive`). Claude Code hooks automatically sync session context:
 
-- **On session start**: The `SessionStart` hook pulls the latest session for the current branch from the sessions repo into `.claude/sessions/{branch}/`.
-- **On session end**: The `SessionEnd` hook pushes local session files back to the sessions repo.
+- **On session start**: The `SessionStart` hook pulls the latest session for the current branch from the sessions repo into `.claude/sessions/{branch}/`. If `ongoing/` has no sessions for this branch, the hook falls back to `archive/` -- so reopening a previously completed branch recovers its history.
+- **On session end**: The `SessionEnd` hook pushes local session files back to the sessions repo. If it detects that another session was pushed to the same branch while you were working, it warns you -- no data is lost, but you should review the other session before continuing.
 
 This means that when you start working on `feat/DI-2826` in `sap_di_etl_monorepo`, you automatically get the latest session context -- even if the last session was worked in `relational-engine`.
+
+## Sibling Repository
+
+The feature often spans both `relational-engine` and `sap_di_etl_monorepo`. Both repos are conventionally checked out side-by-side in the same parent directory:
+
+- **In `relational-engine`**: the sibling is at `../sap_di_etl_monorepo`
+- **In `sap_di_etl_monorepo`**: the sibling is at `../relational-engine`
+
+**Reading from the sibling**: always read freely without asking when session context references files prefixed with the sibling's name (e.g., `sap_di_etl_monorepo/data_intelligence/...`), when you need to verify an assumption about code in the other repo, or to understand caller/callee relationships.
+
+**Modifying the sibling**: if work in the current repo requires a coordinated change in the sibling, describe the specific change to the user and wait for explicit approval before editing. Record the change in the session's **Files Changed** section using the sibling's `{repo}/path` prefix.
 
 ## Commands Reference
 
